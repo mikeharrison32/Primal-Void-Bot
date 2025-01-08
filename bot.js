@@ -22,6 +22,29 @@ const prefix = "!";
 client.once("ready", () => {
   console.log(`Logged in as ${client.user.tag}!`);
 });
+client.on("guildMemberAdd", (member) => {
+  const channelId = "1297835079623508003"; // Replace with your welcome channel ID
+  const channel = member.guild.channels.cache.get(channelId);
+  if (!channel) return;
+
+  const embed = new Discord.EmbedBuilder()
+    .setTitle("🎉 Welcome!")
+    .setDescription(
+      `Welcome to the server, ${member}! We're glad to have you here!`
+    )
+    .setColor("#00FF00")
+    .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
+    .setFooter({
+      text: `Member #${member.guild.memberCount}`,
+      iconURL: member.guild.iconURL(),
+    });
+
+  channel
+    .send({ content: `Hey ${member}, welcome aboard!`, embeds: [embed] })
+    .catch((err) => {
+      console.error("Failed to send welcome message:", err);
+    });
+});
 
 setInterval(() => {
   const channelId = "1297835079623508003";
@@ -81,8 +104,9 @@ client.on("messageCreate", (message) => {
 
   const args = message.content.slice(prefix.length).trim().split(/ +/);
   const command = args.shift().toLowerCase();
-
-  if (command === "ping") {
+  if (command === "testwelcome") {
+    client.emit("guildMemberAdd", message.member);
+  } else if (command === "ping") {
     message.channel.send("Pong!");
   } else if (command === "hello") {
     message.channel.send("Hello there!");
