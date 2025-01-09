@@ -156,6 +156,8 @@ app.get("/", (req, res) => {
 });
 
 app.post("/announcements", async (req, res) => {
+  const { EmbedBuilder } = require("discord.js"); // Import EmbedBuilder
+
   const { channelId, message } = req.body;
 
   try {
@@ -163,8 +165,15 @@ app.post("/announcements", async (req, res) => {
     if (!channel) {
       return res.status(400).json({ error: "Channel not found" });
     }
-    await channel.send(message);
-    res.status(200).json({ message: "Announcement sent" });
+
+    // Create a cool embed using EmbedBuilder
+    const embed = new EmbedBuilder()
+      .setTitle("📢 New Announcement")
+      .setDescription(message)
+      .setColor(0x4e54c8); // Set color (hex code)
+
+    await channel.send({ embeds: [embed] });
+    res.status(200).json({ message: "Announcement sent as an embed" });
   } catch (error) {
     console.error("Error sending announcement:", error);
     res.status(500).json({ error: "Failed to send announcement" });
