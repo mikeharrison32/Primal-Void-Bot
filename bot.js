@@ -2,7 +2,11 @@ const { Client, Intents } = require("discord.js");
 const Discord = require("discord.js");
 const express = require("express");
 require("dotenv").config();
+
+const app = express();
+const port = process.env.PORT || 3000;
 const token = process.env.TOKEN;
+
 const client = new Client({
   intents: [
     Discord.GatewayIntentBits.Guilds,
@@ -141,13 +145,25 @@ client.on("messageCreate", (message) => {
 
 client.login(token);
 
-const app = express();
-const port = process.env.PORT || 3000;
-
 app.get("/", (req, res) => {
   res.send("Bot is running!");
 });
 
+app.post("/announcements", async (req, res) => {
+  const { channelId, message } = req.body;
+
+  try {
+    const channel = await client.channels.fetch(channelId);
+    if (!channel) {
+      return res.status(400).json({ error: "Channel not found" });
+    }
+    await channel.send(message);
+    res.status(200).json({ message: "Announcement sent" });
+  } catch (error) {
+    console.error("Error sending announcement:", error);
+    res.status(500).json({ error: "Failed to send announcement" });
+  }
+});
 app.listen(port, () => {
   console.log(`Express server is running on port ${port}`);
 });
