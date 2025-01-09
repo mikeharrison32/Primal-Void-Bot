@@ -1,9 +1,10 @@
 const { Client, Intents } = require("discord.js");
 const Discord = require("discord.js");
 const express = require("express");
+const cors = require("cors");
 require("dotenv").config();
-
 const app = express();
+app.use(cors({ origin: "*" }));
 const port = process.env.PORT || 3000;
 const token = process.env.TOKEN;
 
