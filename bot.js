@@ -158,7 +158,7 @@ app.get("/", (req, res) => {
 app.post("/announcements", async (req, res) => {
   const { EmbedBuilder } = require("discord.js"); // Import EmbedBuilder
 
-  const { channelId, message } = req.body;
+  const { channelId, title, description } = req.body;
 
   try {
     const channel = await client.channels.fetch(channelId);
@@ -168,8 +168,8 @@ app.post("/announcements", async (req, res) => {
 
     // Create a cool embed using EmbedBuilder
     const embed = new EmbedBuilder()
-      .setTitle("📢 New Announcement")
-      .setDescription(message)
+      .setTitle(title || "📢 New Announcement")
+      .setDescription(description)
       .setColor(0x4e54c8); // Set color (hex code)
 
     await channel.send({ embeds: [embed] });
