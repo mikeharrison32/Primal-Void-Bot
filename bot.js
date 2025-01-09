@@ -9,6 +9,7 @@ app.use(
     origin: "http://localhost:3000", // Allow requests from Next.js frontend (adjust port if necessary)
   })
 );
+app.use(express.json());
 const port = process.env.PORT || 3000;
 const token = process.env.TOKEN;
 
