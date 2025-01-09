@@ -4,7 +4,11 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 const app = express();
-app.use(cors({ origin: "*" }));
+app.use(
+  cors({
+    origin: "http://localhost:3000", // Allow requests from Next.js frontend (adjust port if necessary)
+  })
+);
 const port = process.env.PORT || 3000;
 const token = process.env.TOKEN;
 
