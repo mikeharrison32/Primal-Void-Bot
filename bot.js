@@ -179,6 +179,51 @@ app.post("/announcements", async (req, res) => {
     res.status(500).json({ error: "Failed to send announcement" });
   }
 });
+
+app.get("/api/channels", async (req, res) => {
+  const guildId = "1297835078399033354";
+
+  try {
+    const guild = await client.guilds.fetch(guildId);
+    if (!guild) {
+      return res.status(404).json({ error: "Guild not found" });
+    }
+
+    const channels = guild.channels.cache.map((channel) => ({
+      id: channel.id,
+      name: channel.name,
+      type: channel.type,
+    }));
+
+    res.status(200).json({ channels });
+  } catch (error) {
+    console.error("Error fetching channels:", error);
+    res.status(500).json({ error: "Failed to fetch channels" });
+  }
+});
+
+app.get("/api/roles", async (req, res) => {
+  const guildId = "1297835078399033354";
+
+  try {
+    const guild = await client.guilds.fetch(guildId);
+    if (!guild) {
+      return res.status(404).json({ error: "Guild not found" });
+    }
+
+    const roles = guild.roles.cache.map((role) => ({
+      id: role.id,
+      name: role.name,
+      color: role.color,
+    }));
+
+    res.status(200).json({ roles });
+  } catch (error) {
+    console.error("Error fetching roles:", error);
+    res.status(500).json({ error: "Failed to fetch roles" });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Express server is running on port ${port}`);
 });
