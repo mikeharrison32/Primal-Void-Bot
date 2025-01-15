@@ -1,8 +1,13 @@
-const { Client, Intents } = require("discord.js");
-const Discord = require("discord.js");
+const {
+  Client,
+  Intents,
+  GatewayIntentBits,
+  EmbedBuilder,
+} = require("discord.js");
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
+
 const app = express();
 app.use(
   cors({
@@ -15,29 +20,105 @@ const token = process.env.TOKEN;
 
 const client = new Client({
   intents: [
-    Discord.GatewayIntentBits.Guilds,
-    Discord.GatewayIntentBits.GuildMessages,
-    Discord.GatewayIntentBits.GuildMessageReactions,
-    Discord.GatewayIntentBits.GuildMessageTyping,
-    Discord.GatewayIntentBits.DirectMessages,
-    Discord.GatewayIntentBits.DirectMessageReactions,
-    Discord.GatewayIntentBits.DirectMessageTyping,
-    Discord.GatewayIntentBits.GuildScheduledEvents,
-    Discord.GatewayIntentBits.MessageContent,
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.GuildMessageReactions,
+    GatewayIntentBits.GuildMessageTyping,
+    GatewayIntentBits.DirectMessages,
+    GatewayIntentBits.DirectMessageReactions,
+    GatewayIntentBits.DirectMessageTyping,
+    GatewayIntentBits.GuildScheduledEvents,
   ],
 });
 
 const prefix = "!";
+const afkUsers = new Map(); // Store AFK users and their messages
 
+// Command collection
+const commands = new Map();
+
+commands.set("afk", (message, args) => {
+  const reason = args.join(" ") || "AFK 💤";
+
+  if (afkUsers.has(message.author.id)) {
+    // User is already AFK, update the reason
+    afkUsers.set(message.author.id, reason);
+    message.reply(`You're already AFK. Updated your reason to: "${reason}"`);
+  } else {
+    // User is not AFK, set their status
+    afkUsers.set(message.author.id, reason);
+    message.reply(`You are now AFK: "${reason}"`);
+  }
+});
+
+commands.set("rape", (message, args) => {
+  const user = args.join(" ");
+
+  message.reply(`${user} you have been raped by ${message.author}`);
+});
+
+// 8ball Command
+commands.set("8ball", (message) => {
+  const replies = [
+    "Yes.",
+    "No.",
+    "Maybe.",
+    "Absolutely!",
+    "Not in a million years.",
+    "Ask again later.",
+  ];
+  const reply = replies[Math.floor(Math.random() * replies.length)];
+  message.reply(`🎱 ${reply}`);
+});
+
+// Joke Command
+commands.set("joke", (message) => {
+  const jokes = [
+    "Why don’t skeletons fight each other? They don’t have the guts.",
+    "I told my wife she should embrace her mistakes. She hugged me.",
+    "Why don’t eggs tell jokes? They’d crack each other up.",
+  ];
+  const joke = jokes[Math.floor(Math.random() * jokes.length)];
+  message.reply(`😂 ${joke}`);
+});
+
+// Echo Command
+commands.set("echo", (message, args) => {
+  const text = args.join(" ");
+  if (!text) return message.reply("What do you want me to echo?");
+  message.channel.send(text);
+});
+
+// Help Command
+commands.set("help", (message) => {
+  const embed = new EmbedBuilder()
+    .setTitle("🤖 Fun Bot Commands")
+    .setDescription("Here are the fun commands you can use:")
+    .addFields(
+      { name: "!afk <reason>", value: "Set your AFK status." },
+      { name: "!8ball <question>", value: "Ask the magic 8-ball a question." },
+      { name: "!joke", value: "Hear a random joke." },
+      { name: "!echo <text>", value: "Make the bot repeat your text." },
+      { name: "!help", value: "Show this list of commands." }
+    )
+    .setColor("#FFA500")
+    .setFooter({ text: "Have fun!" });
+
+  message.channel.send({ embeds: [embed] });
+});
+
+// Bot ready event
 client.once("ready", () => {
   console.log(`Logged in as ${client.user.tag}!`);
 });
+
 client.on("guildMemberAdd", (member) => {
   const channelId = "1297835079623508003"; // Replace with your welcome channel ID
   const channel = member.guild.channels.cache.get(channelId);
   if (!channel) return;
 
-  const embed = new Discord.EmbedBuilder()
+  const embed = new EmbedBuilder()
     .setTitle("🎉 Welcome!")
     .setDescription(
       `Welcome to the server, ${member}! We're glad to have you here!`
@@ -70,7 +151,7 @@ setInterval(() => {
         () => Math.random() - 0.5
       );
 
-      const embed = new Discord.EmbedBuilder()
+      const embed = new EmbedBuilder()
         .setTitle("Trivia Question")
         .setDescription(question.question)
         .addFields(
@@ -109,43 +190,31 @@ setInterval(() => {
       message.channel.send("Failed to fetch trivia question.");
     });
 }, 40 * 60 * 1000);
+
 client.on("messageCreate", (message) => {
-  if (!message.content.startsWith(prefix) || message.author.bot) return;
+  if (message.author.bot || !message.content.startsWith(prefix)) return;
+
+  // Check if someone pinged an AFK user
+  // Remove AFK status when the user sends a message
 
   const args = message.content.slice(prefix.length).trim().split(/ +/);
   const command = args.shift().toLowerCase();
-  if (command === "testwelcome") {
-    client.emit("guildMemberAdd", message.member);
-  } else if (command === "ping") {
-    message.channel.send("Pong!");
-  } else if (command === "hello") {
-    message.channel.send("Hello there!");
-  } else if (command === "announce") {
-    const channelId = args.shift();
-    const announcement = args.join(" ");
-    if (!channelId || !announcement) {
-      return message.channel.send(
-        "Please provide a channel ID and an announcement."
-      );
-    }
-    const channel = client.channels.cache.get(channelId);
-    if (!channel) {
-      return message.channel.send(`Channel with ID ${channelId} not found.`);
-    }
 
-    const embed = new Discord.EmbedBuilder()
-      .setTitle("Announcement")
-      .setDescription(announcement)
-      .setColor("#FF0000");
-
-    channel.send({ embeds: [embed] }).catch((err) => {
-      console.error(err);
-      message.channel.send(
-        `Failed to send the announcement in the channel with ID ${channelId}.`
-      );
+  // Handle commands
+  const executeCommand = commands.get(command);
+  if (executeCommand) {
+    executeCommand(message, args);
+  }
+  if (afkUsers.has(message.author.id) && command !== "afk") {
+    afkUsers.delete(message.author.id);
+    message.reply("Welcome back! You've been removed from AFK.");
+  }
+  if (message.mentions.users.size > 0) {
+    message.mentions.users.forEach((user) => {
+      if (afkUsers.has(user.id)) {
+        message.reply(`${user.username} is AFK: "${afkUsers.get(user.id)}"`);
+      }
     });
-  } else if (command === "help") {
-    message.channel.send("Available commands: !ping, !hello, !help");
   }
 });
 
@@ -156,8 +225,6 @@ app.get("/", (req, res) => {
 });
 
 app.post("/announcements", async (req, res) => {
-  const { EmbedBuilder } = require("discord.js"); // Import EmbedBuilder
-
   const { channelId, title, description } = req.body;
 
   try {
